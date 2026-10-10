@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tautito Feed Test</title>
 </head>
 <body>
@@ -13,19 +14,23 @@
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp-K7dEzkbFd8mCRpZt8v153iZ9snuVK-HP_d25ze-8MMWoDb8H-Z02ygoZhPGUjFCOfS6ipR-U10i/pub?output=csv";
 
 fetch(csvUrl)
-  .then(response => response.text())
-  .then(data => 
-    document.getElementById('status').innerHTML =
-      'SUCCESS: Feed loaded. First 200 characters:<br><pre>' +
-      data.substring(0,200) + '</pre>';
+  .then(function(response) 
+    if (!response.ok) 
+      throw new Error("HTTP " + response.status);
+    
+    return response.text();
   )
-  .catch(error => 
-    document.getElementById('status').innerHTML =
-      'FAILED: ' + error;
+  .then(function(data) 
+    document.getElementById("status").textContent =
+      "SUCCESS: Feed loaded. First 200 characters: " +
+      data.substring(0, 200);
+  )
+  .catch(function(error) 
+    document.getElementById("status").textContent =
+      "FAILED: " + error.message;
   );
 </script>
 
 </body>
 </html>
-
 
