@@ -14,7 +14,7 @@
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp-K7dEzkbFd8mCRpZt8v153iZ9snuVK-HP_d25ze-8MMWoDb8H-Z02ygoZhPGUjFCOfS6ipR-U10i/pub?output=csv";
 
 fetch(csvUrl)
-  .then(function(response) 
+  .then(function(response) {
     if (!response.ok) 
       throw new Error("HTTP " + response.status);
     
