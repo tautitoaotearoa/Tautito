@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gigs | Tautito</title>
+  <style>
+    :root { --ink:#17211b; --green:#1f5b45; --cream:#f7f3e8; --gold:#d7a83e; --white:#fff; --muted:#607067; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,Helvetica,sans-serif; color:var(--ink); background:var(--cream); line-height:1.5; }
+    header { background:var(--green); color:var(--white); padding:20px 5%; }
+    nav { max-width:1100px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { color:var(--white); text-decoration:none; font-size:1.8rem; font-weight:700; }
+    nav a.home { color:var(--white); text-decoration:none; }
+    main { max-width:1100px; margin:auto; padding:44px 5% 70px; }
+    h1 { margin:0 0 8px; font-size:clamp(2.2rem,6vw,4rem); }
+    .intro { color:var(--muted); margin:0 0 28px; }
+    .controls { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:18px; }
+    input, select { width:100%; padding:13px 14px; border:1px solid #bbc5bd; border-radius:8px; background:var(--white); font:inherit; }
+    .status { min-height:24px; color:var(--muted); margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; }
+    .card { background:var(--white); border-radius:12px; padding:22px; border-top:5px solid var(--gold); box-shadow:0 4px 16px rgba(23,33,27,.09); }
+    .card h2 { margin:0 0 8px; font-size:1.35rem; }
+    .meta { font-weight:700; color:var(--green); margin:5px 0; }
+    .venue { margin:5px 0; }
+    .blurb { margin:15px 0 0; }
+    .fee { display:inline-block; margin-top:15px; padding:5px 9px; border-radius:999px; background:#eef4ef; font-weight:700; }
+    .empty { grid-column:1/-1; padding:24px; background:var(--white); border-radius:10px; }
+    footer { text-align:center; color:var(--muted); padding:0 5% 35px; }
+    @media (max-width:650px) { .controls { grid-template-columns:1fr; } nav { align-items:flex-start; } }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a class="brand" href="index.html">Tautito</a>
+      <a class="home" href="index.html">Home</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Gigs</h1>
+    <p class="intro">Jazz performances around Aotearoa. Search by artist, venue, town or description.</p>
+
+    <section class="controls" aria-label="Gig filters">
+      <input id="search" type="search" placeholder="Search gigs" aria-label="Search gigs">
+      <select id="region" aria-label="Filter by region">
+        <option value="">All regions</option>
+      </select>
+    </section>
+
+    <div id="status" class="status">Loading gigs...</div>
+    <section id="gig-grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <footer>Tautito</footer>
+
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp-K7dEzkbFd8mCRpZt8v153iZ9snuVK-HP_d25ze-8MMWoDb8H-Z02ygoZhPGUjFCOfS6ipR-U10i/pub?output=csv";
+    let gigs = [];
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], field = "", quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i], next = text[i + 1];
+        if (c === '"' && quoted && next === '"') { field += '"'; i++; }
+        else if (c === '"') { quoted = !quoted; }
+        else if (c === ',' && !quoted) { row.push(field); field = ""; }
+        else if ((c === '\n' || c === '\r') && !quoted) {
+          if (c === '\r' && next === '\n') i++;
+          row.push(field); field = "";
+          if (row.some(value => value.trim() !== "")) rows.push(row);
+          row = [];
+        } else { field += c; }
+      }
+      if (field.length || row.length) { row.push(field); rows.push(row); }
+      const headers = rows.shift().map(h => h.trim());
+      return rows.map(values => Object.fromEntries(headers.map((h, i) => [h, (values[i] || "").trim()])));
+    }
+
+    function escapeHTML(value) {
+      return String(value || "").replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+    }
+
+    function dateValue(value) {
+      if (!value) return Number.MAX_SAFE_INTEGER;
+      const parts = value.split('/');
+      if (parts.length === 3) return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1])).getTime();
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? Number.MAX_SAFE_INTEGER : date.getTime();
+    }
+
+    function formatDate(value) {
+      const stamp = dateValue(value);
+      if (stamp === Number.MAX_SAFE_INTEGER) return value || "Date to be confirmed";
+      const d=new Date(stamp); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    }
+
+    function render() {
+      const query = document.getElementById('search').value.trim().toLowerCase();
+      const region = document.getElementById('region').value;
+      const matches = gigs.filter(gig => {
+        const searchable = [gig['Artist / Ensemble name'], gig['Venue Name'], gig['Town / City'], gig['Gig blurb'], gig['Region']].join(' ').toLowerCase();
+        return (!query || searchable.includes(query)) && (!region || gig['Region'] === region);
+      });
+      const grid = document.getElementById('gig-grid');
+      document.getElementById('status').textContent = matches.length + (matches.length === 1 ? ' gig' : ' gigs');
+      if (!matches.length) { grid.innerHTML = '<div class="empty">No gigs match those filters.</div>'; return; }
+      grid.innerHTML = matches.map(gig => `
+        <article class="card">
+          <h2>${escapeHTML(gig['Artist / Ensemble name'] || 'Artist to be announced')}</h2>
+          <p class="meta">${escapeHTML(formatDate(gig['Date']))}${gig['Time'] ? ' at ' + escapeHTML(gig['Time'].substring(0,5)) : ''}</p>
+          <p class="venue">${escapeHTML(gig['Venue Name'] || 'Venue to be confirmed')}${gig['Town / City'] ? ', ' + escapeHTML(gig['Town / City']) : ''}</p>
+          ${gig['Gig blurb'] ? `<p class="blurb">${escapeHTML(gig['Gig blurb'])}</p>` : ''}
+          ${gig['Entry fee'] ? `<span class="fee">${escapeHTML(gig['Entry fee'])}</span>` : ''}
+        </article>`).join('');
+    }
+
+    fetch(CSV_URL)
+      .then(response => { if (!response.ok) throw new Error('HTTP ' + response.status); return response.text(); })
+      .then(text => {
+        gigs = parseCSV(text)
+          .filter(row => (row['Submission type'] || row['Submission Type'] || '').toLowerCase() === 'gig listing')
+          .sort((a, b) => dateValue(a['Date']) - dateValue(b['Date']));
+        const regions = [...new Set(gigs.map(g => g['Region']).filter(Boolean))].sort();
+        const select = document.getElementById('region');
+        regions.forEach(region => select.add(new Option(region, region)));
+        render();
+      })
+      .catch(error => {
+        document.getElementById('status').textContent = 'The gig listings could not be loaded.';
+        document.getElementById('gig-grid').innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+      });
+
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('region').addEventListener('change', render);
+  </script>
+</body>
+</html>
