@@ -101,7 +101,7 @@
       const query = document.getElementById('search').value.trim().toLowerCase();
       const region = document.getElementById('region').value;
       const matches = gigs.filter(gig => {
-        const searchable = [gig['Artist / Ensemble name'], gig['Venue Name'], gig['Town / City'], gig['Short blurb'], gig['Region']].join(' ').toLowerCase();
+        const searchable = [gig['Artist / Ensemble name'], gig['Venue Name'], gig['Town / City'], gig['Gig blurb'], gig['Region']].join(' ').toLowerCase();
         return (!query || searchable.includes(query)) && (!region || gig['Region'] === region);
       });
       const grid = document.getElementById('gig-grid');
@@ -110,9 +110,9 @@
       grid.innerHTML = matches.map(gig => `
         <article class="card">
           <h2>${escapeHTML(gig['Artist / Ensemble name'] || 'Artist to be announced')}</h2>
-          <p class="meta">${escapeHTML(formatDate(gig['Date']))}${gig['Time'] ? ' at ' + escapeHTML(gig['Time']) : ''}</p>
+          <p class="meta">${escapeHTML(formatDate(gig['Date']))}${gig['Time'] ? ' at ' + escapeHTML(gig['Time'].substring(0,5)) : ''}</p>
           <p class="venue">${escapeHTML(gig['Venue Name'] || 'Venue to be confirmed')}${gig['Town / City'] ? ', ' + escapeHTML(gig['Town / City']) : ''}</p>
-          ${gig['Short blurb'] ? `<p class="blurb">${escapeHTML(gig['Short blurb'])}</p>` : ''}
+          ${gig['Gig blurb'] ? `<p class="blurb">${escapeHTML(gig['Gig blurb'])}</p>` : ''}
           ${gig['Entry fee'] ? `<span class="fee">${escapeHTML(gig['Entry fee'])}</span>` : ''}
         </article>`).join('');
     }
