@@ -1,1 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tautito Feed Test</title>
+</head>
+<body>
+
+<h1>Tautito Feed Test</h1>
+<p id="status">Testing connection...</p>
+
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp-K7dEzkbFd8mCRpZt8v153iZ9snuVK-HP_d25ze-8MMWoDb8H-Z02ygoZhPGUjFCOfS6ipR-U10i/pub?output=csv";
+
+fetch(csvUrl)
+  .then(response => response.text())
+  .then(data => 
+    document.getElementById('status').innerHTML =
+      'SUCCESS: Feed loaded. First 200 characters:<br><pre>' +
+      data.substring(0,200) + '</pre>';
+  )
+  .catch(error => 
+    document.getElementById('status').innerHTML =
+      'FAILED: ' + error;
+  );
+</script>
+
+</body>
+</html>
+
 
