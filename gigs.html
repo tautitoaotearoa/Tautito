@@ -144,7 +144,7 @@
 
     .controls {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 2fr 1fr 1fr;
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -301,10 +301,17 @@
 
   <main>
     <h1>Gigs</h1>
-    <p class="intro">Jazz performances around Aotearoa. Search by artist, venue, town or description.</p>
+    <p class="intro">Jazz performances around Aotearoa. Search by artist, venue, town or description, and filter by date and region.</p>
 
     <section class="controls" aria-label="Gig filters">
       <input id="search" type="search" placeholder="Search gigs" aria-label="Search gigs">
+      <select id="date-filter" aria-label="Filter by date range">
+        <option value="">All upcoming dates</option>
+        <option value="7">Next 7 days</option>
+        <option value="30">Next 30 days</option>
+        <option value="month">This calendar month</option>
+        <option value="3months">Next 3 months</option>
+      </select>
       <select id="region" aria-label="Filter by region">
         <option value="">All regions</option>
       </select>
@@ -341,7 +348,7 @@
     }
 
     function escapeHTML(value) {
-      return String(value || "").replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+      return String(value || "").replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[char]));
     }
 
     function dateValue(value) {
@@ -353,62 +360,3 @@
     }
 
     function formatDate(value) {
-      const stamp = dateValue(value);
-      if (stamp === Number.MAX_SAFE_INTEGER) return value || "Date to be confirmed";
-      const d = new Date(stamp);
-      return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-    }
-
-    function render() {
-      const query = document.getElementById('search').value.trim().toLowerCase();
-      const region = document.getElementById('region').value;
-      const matches = gigs.filter(gig => {
-        const searchable = [gig['Artist / Ensemble name'], gig['Venue Name'], gig['Town / City'], gig['Gig blurb'], gig['Region']].join(' ').toLowerCase();
-        return (!query || searchable.includes(query)) && (!region || gig['Region'] === region);
-      });
-      const grid = document.getElementById('gig-grid');
-      document.getElementById('status').textContent = matches.length + (matches.length === 1 ? ' gig' : ' gigs');
-      if (!matches.length) {
-        grid.innerHTML = '<div class="empty">No gigs match those filters.</div>';
-        return;
-      }
-      grid.innerHTML = matches.map(gig => `
-        <article class="card">
-          <h2>${escapeHTML(gig['Artist / Ensemble name'] || 'Artist to be announced')}</h2>
-          <p class="meta">${escapeHTML(formatDate(gig['Date']))}${gig['Time'] ? ' at ' + escapeHTML(gig['Time'].substring(0, 5)) : ''}</p>
-          <p class="venue">${escapeHTML(gig['Venue Name'] || 'Venue to be confirmed')}${gig['Town / City'] ? ', ' + escapeHTML(gig['Town / City']) : ''}</p>
-          ${gig['Gig blurb'] ? `<p class="blurb">${escapeHTML(gig['Gig blurb'])}</p>` : ''}
-          ${gig['Entry fee'] ? `<span class="fee">${escapeHTML(gig['Entry fee'])}</span>` : ''}
-        </article>`).join('');
-    }
-
-    fetch(CSV_URL)
-      .then(response => {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.text();
-      })
-      .then(text => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        gigs = parseCSV(text)
-          .filter(row => {
-            const isGig = (row['Submission type'] || row['Submission Type'] || '').toLowerCase() === 'gig listing';
-            const gigDate = dateValue(row['Date']);
-            return isGig && gigDate !== Number.MAX_SAFE_INTEGER && gigDate >= today.getTime();
-          })
-          .sort((a, b) => dateValue(a['Date']) - dateValue(b['Date']));
-        const regions = [...new Set(gigs.map(g => g['Region']).filter(Boolean))].sort();
-        const select = document.getElementById('region');
-        regions.forEach(region => select.add(new Option(region, region)));
-        render();
-      })
-      .catch(error => {
-        document.getElementById('status').textContent = 'The gig listings could not be loaded.';
-        document.getElementById('gig-grid').innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
-      });
-
-    document.getElementById('search').addEventListener('input', render);
-    document.getElementById('region').addEventListener('change', render);
-  </script>
-</body>
-</html>
