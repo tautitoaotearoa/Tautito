@@ -368,7 +368,7 @@
 
     function thumb(u) {
       const id = fileId(u);
-      return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : '';
+      return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000' : '';
     }
 
     function dateVal(v) {
@@ -395,27 +395,45 @@
 
     function render() {
       const q = document.getElementById('search').value.toLowerCase().trim();
-      const g = document.getElementById('grid');
+      const gridElem = document.getElementById('grid');
       const items = releases.filter(r => JSON.stringify(r).toLowerCase().includes(q));
+      
       document.getElementById('status').textContent = items.length + (items.length === 1 ? ' release' : ' releases');
+      
       if (!items.length) {
-        g.innerHTML = '<div class="empty">No releases match your search.</div>';
+        gridElem.innerHTML = '<div class="empty">No releases match your search.</div>';
         return;
       }
-      g.innerHTML = items.map(r => `
-        <article class="card">
-          ${r['Album Image'] ? `<img class="thumb" src="${escapeHTML(thumb(r['Album Image']))}" alt="${escapeHTML(r['Album / track title'] || 'Album cover')}">` : ''}
-          <div class="content">
-            <h2 class="artist">${escapeHTML(r['Artist'] || 'Artist Name')}</h2>
-            <div class="title">${escapeHTML(r['Album / track title'] || 'Untitled')}</div>
-            <div class="meta">${escapeHTML(r['Label'] || '')}${r['Label'] && r['Release date'] ? ' • ' : ''}${escapeHTML(fmt(r['Release date']))}</div>
-            ${r['Album blurb'] ? `<p class="blurb">\${escapeHTML(r['Album blurb'])}</p>` : ''}
-            <div class="buttons">
-              ${r['Listening / purchase link'] ? `<a target="_blank" rel="noopener" href="\${escapeHTML(r['Listening / purchase link'])}">Listen</a>` : ''}
-              ${r['Electronic Press Kit / Press Release'] ? `<a target="_blank" rel="noopener" href="\${escapeHTML(r['Electronic Press Kit / Press Release'])}">EPK</a>` : ''}
-            </div>
-          </div>
-        </article>`).join('');
+
+      gridElem.innerHTML = items.map(r => {
+        const imgTag = r['Album Image'] ? '<img class="thumb" src="' + escapeHTML(thumb(r['Album Image'])) + '" alt="' + escapeHTML(r['Album / track title'] || 'Album cover') + '">' : '';
+        const artist = escapeHTML(r['Artist'] || 'Artist Name');
+        const title = escapeHTML(r['Album / track title'] || 'Untitled');
+        const label = escapeHTML(r['Label'] || '');
+        const dateStr = escapeHTML(fmt(r['Release date']));
+        const metaSep = (r['Label'] && r['Release date']) ? ' • ' : '';
+        const blurbText = r['Album blurb'] ? '<p class="blurb">' + escapeHTML(r['Album blurb']) + '</p>' : '';
+        
+        let buttonsHtml = '';
+        if (r['Listening / purchase link']) {
+          buttonsHtml += '<a target="_blank" rel="noopener" href="' + escapeHTML(r['Listening / purchase link']) + '">Listen</a>';
+        }
+        if (r['Electronic Press Kit / Press Release']) {
+          buttonsHtml += '<a target="_blank" rel="noopener" href="' + escapeHTML(r['Electronic Press Kit / Press Release']) + '">EPK</a>';
+        }
+        const buttonsContainer = buttonsHtml ? '<div class="buttons">' + buttonsHtml + '</div>' : '';
+
+        return '<article class="card">' +
+          imgTag +
+          '<div class="content">' +
+            '<h2 class="artist">' + artist + '</h2>' +
+            '<div class="title">' + title + '</div>' +
+            '<div class="meta">' + label + metaSep + dateStr + '</div>' +
+            blurbText +
+            buttonsContainer +
+          '</div>' +
+        '</article>';
+      }).join('');
     }
 
     fetch(CSV_URL)
@@ -436,7 +454,7 @@
       })
       .catch(error => {
         document.getElementById('status').textContent = 'Releases could not be loaded.';
-        document.getElementById('grid').innerHTML = `<div class="empty">${escapeHTML(error.message)}</div>`;
+        document.getElementById('grid').innerHTML = '<div class="empty">' + escapeHTML(error.message) + '</div>';
       });
 
     document.getElementById('search').addEventListener('input', render);
