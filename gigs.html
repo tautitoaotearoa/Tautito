@@ -387,18 +387,31 @@
 
       const grid = document.getElementById('gig-grid');
       document.getElementById('status').textContent = matches.length + (matches.length === 1 ? ' gig' : ' gigs');
+      
       if (!matches.length) {
         grid.innerHTML = '<div class="empty">No gigs match those filters.</div>';
         return;
       }
-      grid.innerHTML = matches.map(gig => `
-        <article class="card">
-          <h2>${escapeHTML(gig['Artist / Ensemble name'] || 'Artist to be announced')}</h2>
-          <p class="meta">${escapeHTML(formatDate(gig['Date']))}${gig['Time'] ? ' at ' + escapeHTML(gig['Time'].substring(0, 5)) : ''}</p>
-          <p class="venue">${escapeHTML(gig['Venue Name'] || 'Venue to be confirmed')}${gig['Town / City'] ? ', ' + escapeHTML(gig['Town / City']) : ''}</p>
-          ${gig['Gig blurb'] ? `<p class="blurb">\${escapeHTML(gig['Gig blurb'])}</p>` : ''}
-          ${gig['Entry fee'] ? `<span class="fee">\${escapeHTML(gig['Entry fee'])}</span>` : ''}
-        </article>`).join('');
+
+      grid.innerHTML = matches.map(gig => {
+        const artist = escapeHTML(gig['Artist / Ensemble name'] || 'Artist to be announced');
+        const dateStr = escapeHTML(formatDate(gig['Date']));
+        const timeStr = gig['Time'] ? ' at ' + escapeHTML(gig['Time'].substring(0, 5)) : '';
+        const venueName = escapeHTML(gig['Venue Name'] || 'Venue to be confirmed');
+        const townCity = gig['Town / City'] ? ', ' + escapeHTML(gig['Town / City']) : '';
+        const blurb = gig['Gig blurb'] ? `<p class="blurb">${escapeHTML(gig['Gig blurb'])}</p>` : '';
+        const fee = gig['Entry fee'] ? `<span class="fee">${escapeHTML(gig['Entry fee'])}</span>` : '';
+
+        return `
+          <article class="card">
+            <h2>${artist}</h2>
+            <p class="meta">${dateStr}${timeStr}</p>
+            <p class="venue">${venueName}${townCity}</p>
+            ${blurb}
+            ${fee}
+          </article>
+        `;
+      }).join('');
     }
 
     fetch(CSV_URL)
