@@ -485,3 +485,36 @@
           buttonsHtml += '<a target="_blank" rel="noopener noreferrer" href="' + escapeHTML(url) + '">EPK</a>';
         }
         const buttonsContainer = buttonsHtml ? '<div class="buttons">' + buttonsHtml + '</div>' :
+
+          return '<article class="card">' +
+          imgTag +
+          '<div class="content">' +
+            '<h2 class="artist">' + artist + '</h2>' +
+            '<div class="title">' + title + '</div>' +
+            '<div class="meta">' + label + metaSep + dateStr + '</div>' +
+            blurbText +
+            buttonsContainer +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    fetch(CSV_URL)
+      .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      })
+      .then(text => {
+        releases = csv(text)
+          .sort((a, b) => dateVal(b['Release date'] || b['Date']) - dateVal(a['Release date'] || a['Date']));
+        render();
+      })
+      .catch(error => {
+        document.getElementById('status').textContent = 'Releases could not be loaded.';
+        document.getElementById('grid').innerHTML = '<div class="empty">' + escapeHTML(error.message) + '</div>';
+      });
+
+    document.getElementById('search').addEventListener('input', render);
+  </script>
+</body>
+</html>
