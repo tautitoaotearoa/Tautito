@@ -1,1 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#303b8f">
+  <title>{{ page.title }} | Jazz Aotearoa</title>
+  <style>
+    :root {
+      --ja-blue: #303b8f;
+      --ja-blue-dark: #202965;
+      --ja-teal: #52aaa6;
+      --ja-ink: #171a25;
+      --ja-muted: #626878;
+      --ja-light: #f5f6fa;
+      --ja-line: #dfe2eb;
+      --ja-white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", Avenir, Montserrat, "Segoe UI", Arial, Helvetica, sans-serif;
+      color: var(--ja-ink);
+      background: var(--ja-light);
+      line-height: 1.6;
+    }
+    header {
+      background: var(--ja-blue);
+      color: var(--ja-white);
+      padding: 30px 5%;
+    }
+    nav {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 17px;
+      color: var(--ja-white);
+      text-decoration: none;
+    }
+    .brand-mark {
+      position: relative;
+      width: 70px;
+      height: 48px;
+      flex: 0 0 auto;
+    }
+    .brand-mark span {
+      position: absolute;
+      display: block;
+      background: linear-gradient(145deg, var(--ja-teal), var(--ja-blue-dark));
+      border-radius: 4px 17px 4px 17px;
+      transform: skewY(31deg);
+    }
+    .brand-mark .mark-left { width: 30px; height: 26px; left: 0; top: 11px; }
+    .brand-mark .mark-centre { width: 27px; height: 47px; left: 25px; top: 0; transform: skewY(31deg) rotate(180deg); }
+    .brand-mark .mark-right { width: 30px; height: 26px; right: 0; top: 11px; }
+    .brand-text {
+      font-size: 1.2rem;
+      font-weight: 400;
+      letter-spacing: .3em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px 22px;
+    }
+    .menu a {
+      color: var(--ja-white);
+      text-decoration: none;
+      font-size: .93rem;
+      letter-spacing: .04em;
+      border-bottom: 2px solid transparent;
+      padding: 6px 0;
+    }
+    .menu a:hover, .menu a[aria-current="page"] {
+      border-bottom-color: var(--ja-teal);
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 52px 5% 76px;
+      background: var(--ja-white);
+      margin-top: 40px;
+      margin-bottom: 40px;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px rgba(31, 40, 97, .05);
+      border: 1px solid var(--ja-line);
+    }
+    h1 {
+      margin: 0 0 16px;
+      color: var(--ja-blue);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 500;
+      letter-spacing: -.02em;
+    }
+    img.article-hero {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+    .post-meta {
+      color: var(--ja-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--ja-line);
+      padding-bottom: 12px;
+    }
+    footer {
+      background: var(--ja-blue-dark);
+      color: rgba(255, 255, 255, .82);
+      padding: 28px 5%;
+      text-align: center;
+      font-size: .9rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Jazz Aotearoa home">
+        <span class="brand-mark" aria-hidden="true">
+          <span class="mark-left"></span>
+          <span class="mark-centre"></span>
+          <span class="mark-right"></span>
+        </span>
+        <span class="brand-text">Jazz<br>Aotearoa</span>
+      </a>
+      <div class="menu">
+        <a href="/gigs.html">Gigs</a>
+        <a href="/releases.html">Releases</a>
+        <a href="/news.html">News</a>
+        <a href="/reviews/index.html">Reviews</a>
+        <a href="/interviews/index.html">Interviews</a>
+        <a href="/throwbacks/index.html">Throwbacks</a>
+      </div>
+    </nav>
+  </header>
 
+  <main>
+    <h1>{{ page.title }}</h1>
+    <div class="post-meta">Published on {{ page.date | date: "%B %d, %Y" }}</div>
+    {% if page.image %}
+      <img src="{{ page.image }}" alt="{{ page.title }}" class="article-hero">
+    {% endif %}
+    
+    {{ content }}
+  </main>
+
+  <footer>Jazz Aotearoa</footer>
+</body>
+</html>
